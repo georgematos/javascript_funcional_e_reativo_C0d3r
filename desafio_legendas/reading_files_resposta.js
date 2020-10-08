@@ -1,4 +1,5 @@
 const fs = require('fs')
+const { resolve } = require('path')
 
 const pathOfLegends = `${__dirname}/legendas`
 
@@ -16,24 +17,27 @@ const listFilesFromPath = (pathDir) => {
 
 const filterFilesForExtension = (ext, files) => {
   const regex = `.${ext}$`
-  if (Array.isArray(files)) {
-    return files.filter(file => file.match(regex))
-  }
+  return files.filter(file => file.match(regex))
 }
 
-const readFiles = (filesNames) => {
-  const array = []
-  for (let f of filesNames) {
-    const file = fs.readFileSync(`${__dirname}/legendas/${f}`, { encoding: 'utf8', flag: 'r' })
-    array.push(file)
-  }
-  return array
+const readFileNames = (filePath) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const file = fs.readFileSync(filePath, { encoding: 'utf8', flag: 'r' })
+      resolve(file)
+    } catch (error) {
+      reject(error)
+    }
+  })
 }
 
-const changeFileLinesToOneArrayElements = (openFiles) => {
-  if (Array.isArray(openFiles)) {
-    return openFiles.flatMap(file => file.split('\n'))
-  }
+const openFiles = (filesNames) => {
+  // Promisse.all resolve todas as promessas e só depois retorna um array com todas as respostas
+  return Promise.all(filesNames.map(fileName => readFileNames(`${__dirname}/legendas/${fileName}`)))
+}
+
+const changeFileLinesToOneArrayElements = (openedFiles) => {
+  return openedFiles.flatMap(file => file.split('\n'))
 }
 
 const removeEmptyLines = (files) => {
@@ -66,31 +70,21 @@ const removeTrashWords = (words) => {
   return words.filter(w => w !== '' && w !== '-')    
 }
 
-const countElements = (arrayElements) => {
-  // Usando for (primeira solucao encontrada)
-  // words = {}
-  // for (w of arrayWords) {
-  //   let wl = w.toLowerCase()
-  //   words[wl] = (words[wl] || 0) + 1
-  // }
-  // const resultList = Object.keys(words).map((key) => ({
-  //   'word': key,
-  //   'qtd': words[key]
-  // })).sort((a, b) => b.qtd - a.qtd)
-  
-  const elements = arrayElements.reduce((acc, el) => {
-    acc[el] = (acc[el] || 0) + 1
-    return acc
-  }, {})
+const toLowerCase = (strings) => {
+  return strings.map(s => s.toLowerCase())
+}
 
-  return Object.keys(elements).map(key => {
-    return {'element': key, 'qtd': elements[key]}
-  }).sort((a, b) => b.qtd - a.qtd)
+const countElements = (array) => {
+  return Object.values(array.reduce((acc, el) => {
+    const qtd = acc[el] ? acc[el].qtd + 1 : 1 // se o elemento ainda não existe conta 1x, se existir, conta qtd+1
+    acc[el] = { word: el, qtd } // cria um objeto dentro do acc se ele n existir, se existir ele sobrescreverá com a nova qtd
+    return acc
+  }, {})).sort((a, b) => b.qtd - a.qtd) 
 }
 
 listFilesFromPath(pathOfLegends)
   .then((filenames) => filterFilesForExtension('srt', filenames))
-  .then(readFiles)
+  .then(openFiles)
   .then(changeFileLinesToOneArrayElements)
   .then(removeEmptyLines)
   .then(removeNumberLines)
@@ -98,5 +92,6 @@ listFilesFromPath(pathOfLegends)
   .then(removeTrashCharsFromLines)
   .then(linesToWords)
   .then(removeTrashWords)
+  .then(toLowerCase)
   .then(countElements)
   .then(console.log)
