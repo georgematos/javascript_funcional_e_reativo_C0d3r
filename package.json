@@ -1,0 +1,23 @@
+{
+  "name": "javascript-funcional-e-reativo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/georgematos/javascript_funcional_e_reativo_C0d3r.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/georgematos/javascript_funcional_e_reativo_C0d3r/issues"
+  },
+  "homepage": "https://github.com/georgematos/javascript_funcional_e_reativo_C0d3r#readme",
+  "dependencies": {
+    "rxjs": "^6.6.3"
+  }
+}
