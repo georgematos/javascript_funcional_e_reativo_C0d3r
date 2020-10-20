@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/georgematos/javascript_funcional_e_reativo_C0d3r#readme",
   "dependencies": {
-    "rxjs": "^6.6.3"
+    "rxjs": "^6.6.3",
+    "xmlhttprequest": "^1.8.0"
   }
 }
