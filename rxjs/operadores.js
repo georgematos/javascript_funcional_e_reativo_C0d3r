@@ -25,6 +25,9 @@ obs$
   .subscribe((val) => console.log(val))
 
 obsB$
-  .pipe(last())
-  .pipe(map(x => x.slice(2, x.length)))
+  .pipe(
+    last(),
+    map(x => x.slice(2, x.length)),
+    map(x => x.toUpperCase())
+  )
   .subscribe(val => console.log(val))
