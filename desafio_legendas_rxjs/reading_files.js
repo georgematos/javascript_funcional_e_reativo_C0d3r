@@ -15,12 +15,24 @@ const listFilesFromPath = (pathDir) => {
   })
 }
 
-const filterFilesForExtension = (ext, files) => {
-  const regex = `.${ext}$`
-  if (Array.isArray(files)) {
-    return files.filter(file => file.match(regex))
-  }
-}
+const filterFilesForExtension = (ext) =>
+  (source) => new Observable(subscriber => {
+    const subscription = source.subscribe({
+      next(file) {
+        const regex = `.${ext}$`
+        if(file.match(regex)) {
+          subscriber.next(file)
+        }
+      },
+      error(error) {
+        subscriber.error(error)
+      },
+      complete() {
+        subscriber.complete()
+      }
+    })
+    return () => subscription.unsubscribe()
+  })
 
 const readFiles = (filesNames) => {
   const array = []
@@ -79,6 +91,9 @@ const countElements = (arrayElements) => {
 }
 
 listFilesFromPath(pathOfLegends)
+  .pipe(
+    filterFilesForExtension('srt')
+  )
   .subscribe(console.log)
 
 // listFilesFromPath(pathOfLegends)
