@@ -15,14 +15,36 @@ const listFilesFromPath = (pathDir) => {
   })
 }
 
-const filterFilesForExtension = (ext) =>
+// Fabrica de operadores
+function operatorsFactory(fn) {
+  return (source) => new Observable(subscriber => {
+    const subscription = fn(subscriber)
+    source.subscribe({
+      next: subscription.next,
+      error: subscription.error || (e => subscriber.error(e)),
+      complete: subscription.complete || (e => subscriber.complete(e))
+    })
+  })
+}
+
+// Operador
+const filterFilesByExtension = (ext) =>
+ operatorsFactory(subsecriber => ({
+   next(file) {
+     const regex = `.${ext}$`
+     if(file.match(regex)) {
+       subsecriber.next(file)
+      }
+    },
+   complete() {}
+}))
+
+const readFiles = () =>
   (source) => new Observable(subscriber => {
     const subscription = source.subscribe({
-      next(file) {
-        const regex = `.${ext}$`
-        if(file.match(regex)) {
-          subscriber.next(file)
-        }
+      next(value) {
+        const file = fs.readFileSync(`${__dirname}/legendas/${value}`, { encoding: 'utf8', flag: 'r' })
+        subscriber.next(file)
       },
       error(error) {
         subscriber.error(error)
@@ -34,14 +56,14 @@ const filterFilesForExtension = (ext) =>
     return () => subscription.unsubscribe()
   })
 
-const readFiles = (filesNames) => {
-  const array = []
-  for (let f of filesNames) {
-    const file = fs.readFileSync(`${__dirname}/legendas/${f}`, { encoding: 'utf8', flag: 'r' })
-    array.push(file)
-  }
-  return array
-}
+// const readFiles = (filesNames) => {
+//   const array = []
+//   for (let f of filesNames) {
+//     const file = fs.readFileSync(`${__dirname}/legendas/${f}`, { encoding: 'utf8', flag: 'r' })
+//     array.push(file)
+//   }
+//   return array
+// }
 
 const changeFileLinesToOneArrayElements = (openFiles) => {
   if (Array.isArray(openFiles)) {
@@ -92,7 +114,8 @@ const countElements = (arrayElements) => {
 
 listFilesFromPath(pathOfLegends)
   .pipe(
-    filterFilesForExtension('srt')
+    filterFilesByExtension('srt'),
+    // readFiles()
   )
   .subscribe(console.log)
 
