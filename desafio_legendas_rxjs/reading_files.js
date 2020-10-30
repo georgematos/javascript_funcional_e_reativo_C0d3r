@@ -29,41 +29,24 @@ function operatorsFactory(fn) {
 
 // Operador
 const filterFilesByExtension = (ext) =>
- operatorsFactory(subsecriber => ({
-   next(file) {
-     const regex = `.${ext}$`
-     if(file.match(regex)) {
-       subsecriber.next(file)
+  operatorsFactory(subsecriber => ({
+    next(file) {
+      const regex = `.${ext}$`
+      if (file.match(regex)) {
+        subsecriber.next(file)
       }
     },
-   complete() {}
-}))
+    complete() { }
+  }))
 
 const readFiles = () =>
-  (source) => new Observable(subscriber => {
-    const subscription = source.subscribe({
-      next(value) {
-        const file = fs.readFileSync(`${__dirname}/legendas/${value}`, { encoding: 'utf8', flag: 'r' })
-        subscriber.next(file)
-      },
-      error(error) {
-        subscriber.error(error)
-      },
-      complete() {
-        subscriber.complete()
-      }
-    })
-    return () => subscription.unsubscribe()
-  })
-
-// const readFiles = (filesNames) => {
-//   const array = []
-//   for (let f of filesNames) {
-//     const file = fs.readFileSync(`${__dirname}/legendas/${f}`, { encoding: 'utf8', flag: 'r' })
-//     array.push(file)
-//   }
-//   return array
-// }
+  operatorsFactory(subscriber => ({
+    next(file) {
+      const readedFile = fs.readFileSync(`${__dirname}/legendas/${file}`, { encoding: 'utf8', flag: 'r' })
+      subscriber.next(readedFile)
+    },
+    complete() { }
+  }))
 
 const changeFileLinesToOneArrayElements = (openFiles) => {
   if (Array.isArray(openFiles)) {
@@ -115,7 +98,7 @@ const countElements = (arrayElements) => {
 listFilesFromPath(pathOfLegends)
   .pipe(
     filterFilesByExtension('srt'),
-    // readFiles()
+    readFiles()
   )
   .subscribe(console.log)
 
