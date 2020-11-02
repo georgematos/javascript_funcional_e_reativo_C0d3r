@@ -65,15 +65,22 @@ const removeWhiteSpaces = () =>
     complete() { }
   }))
 
-const removeTagLines = (files) => {
-  const lineIsTag = '^<'
-  return files.filter(line => !line.match(lineIsTag))
-}
 
-const removeNumberLines = (files) => {
-  const lineIsNumerLine = '^\\d+'
-  return files.filter(line => !line.match(lineIsNumerLine))
-}
+const removeTagLines = () =>
+  operatorsFactory(subscriber => ({
+    next(file) {
+      subscriber.next(file.filter(line => !line.match('^<')))
+    },
+    complete() { }
+  }))
+
+const removeNumberLines = () =>
+  operatorsFactory(subscriber => ({
+    next(file) {
+      subscriber.next(file.filter(line => !line.match('^\\d+')))
+    },
+    complete() { }
+  }))
 
 const removeTrashCharsFromLines = (array) => {
   return array.map(l => l.replace(/(\r\n|\n|\r|^- |\.+|\?$|,|♪|<[^>]*>|"|\?|!|\[|\]|--|\d)/gm, ""))
@@ -106,7 +113,9 @@ listFilesFromPath(pathOfLegends)
     filterFilesByExtension('srt'),
     readFiles(),
     changeFileLinesToOneArrayElements(),
-    removeWhiteSpaces()
+    removeWhiteSpaces(),
+    removeTagLines(),
+    removeNumberLines()
   )
   .subscribe(console.log)
 
