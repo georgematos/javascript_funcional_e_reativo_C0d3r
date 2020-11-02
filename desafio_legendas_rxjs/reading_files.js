@@ -48,11 +48,14 @@ const readFiles = () =>
     complete() { }
   }))
 
-const changeFileLinesToOneArrayElements = (openFiles) => {
-  if (Array.isArray(openFiles)) {
-    return openFiles.flatMap(file => file.split('\n'))
-  }
-}
+
+const changeFileLinesToOneArrayElements = () =>
+  operatorsFactory(subscriber => ({
+    next(openFile) {
+      subscriber.next(openFile.split('\n'))
+    },
+    complete() { }
+  }))
 
 const removeEmptyLines = (files) => {
   // se a linha for vazia o trim vai remover
@@ -98,7 +101,8 @@ const countElements = (arrayElements) => {
 listFilesFromPath(pathOfLegends)
   .pipe(
     filterFilesByExtension('srt'),
-    readFiles()
+    readFiles(),
+    changeFileLinesToOneArrayElements()
   )
   .subscribe(console.log)
 
