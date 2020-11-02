@@ -57,10 +57,13 @@ const changeFileLinesToOneArrayElements = () =>
     complete() { }
   }))
 
-const removeEmptyLines = (files) => {
-  // se a linha for vazia o trim vai remover
-  return files.map(f => f.trim())
-}
+const removeWhiteSpaces = () =>
+  operatorsFactory(subscriber => ({
+    next(file) {
+      subscriber.next(file.map(line => line.trim()))
+    },
+    complete() { }
+  }))
 
 const removeTagLines = (files) => {
   const lineIsTag = '^<'
@@ -102,7 +105,8 @@ listFilesFromPath(pathOfLegends)
   .pipe(
     filterFilesByExtension('srt'),
     readFiles(),
-    changeFileLinesToOneArrayElements()
+    changeFileLinesToOneArrayElements(),
+    removeWhiteSpaces()
   )
   .subscribe(console.log)
 
