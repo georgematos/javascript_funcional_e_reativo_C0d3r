@@ -82,20 +82,31 @@ const removeNumberLines = () =>
     complete() { }
   }))
 
-const removeTrashCharsFromLines = (array) => {
-  return array.map(l => l.replace(/(\r\n|\n|\r|^- |\.+|\?$|,|♪|<[^>]*>|"|\?|!|\[|\]|--|\d)/gm, ""))
-}
 
-const linesToWords = (lines) => {
-  let result = lines.map(l => l.split(" "))
-  let words = result.flat()
+const removeTrashCharsFromLines = () => 
+  operatorsFactory(subscriber => ({
+    next(file) {
+      subscriber.next(file.map(l => l.replace(/(\r\n|\n|\r|^- |\.+|\?$|,|♪|<[^>]*>|"|\?|!|\[|\]|--|\d)/gm, "")))
+    },
+    complete() { }
+  }))
 
-  return words
-}
 
-const removeTrashWords = (words) => {
-  return words.filter(w => w !== '' && w !== '-')
-}
+const linesToWords = () =>
+  operatorsFactory(subscriber => ({
+    next(file) {
+      subscriber.next(file.map(l => l.split(" ")))
+    },
+    complete() { }
+  }))
+
+const removeTrashWords = () =>
+  operatorsFactory(subscriber => ({
+    next(file) {
+      subscriber.next(file.filter(w => w !== '' && w !== '-'))
+    },
+    complete() { }
+  }))
 
 const countElements = (arrayElements) => {
   const elements = arrayElements.reduce((acc, el) => {
@@ -115,7 +126,10 @@ listFilesFromPath(pathOfLegends)
     changeFileLinesToOneArrayElements(),
     removeWhiteSpaces(),
     removeTagLines(),
-    removeNumberLines()
+    removeNumberLines(),
+    removeTrashCharsFromLines(),
+    linesToWords(),
+    removeTrashWords()
   )
   .subscribe(console.log)
 
