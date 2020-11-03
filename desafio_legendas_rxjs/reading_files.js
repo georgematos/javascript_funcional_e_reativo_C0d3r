@@ -1,5 +1,6 @@
 const fs = require('fs')
 const { Observable } = require('rxjs')
+const { reduce } = require('rxjs/operators')
 
 const pathOfLegends = `${__dirname}/legendas`
 
@@ -36,7 +37,9 @@ const filterFilesByExtension = (ext) =>
         subsecriber.next(file)
       }
     },
-    complete() { }
+    complete() {
+      subsecriber.complete()
+    }
   }))
 
 const readFiles = () =>
@@ -44,17 +47,21 @@ const readFiles = () =>
     next(file) {
       const readedFile = fs.readFileSync(`${__dirname}/legendas/${file}`, { encoding: 'utf8', flag: 'r' })
       subscriber.next(readedFile)
+      // subscriber.complete()
     },
-    complete() { }
+    complete() {
+      subscriber.complete()
+    }
   }))
 
-
-const changeFileLinesToOneArrayElements = () =>
+const divideFileInLines = () =>
   operatorsFactory(subscriber => ({
     next(openFile) {
       subscriber.next(openFile.split('\n'))
     },
-    complete() { }
+    complete() {
+      subscriber.complete()
+    }
   }))
 
 const removeWhiteSpaces = () =>
@@ -62,7 +69,9 @@ const removeWhiteSpaces = () =>
     next(file) {
       subscriber.next(file.map(line => line.trim()))
     },
-    complete() { }
+    complete() {
+      subscriber.complete()
+    }
   }))
 
 
@@ -71,7 +80,9 @@ const removeTagLines = () =>
     next(file) {
       subscriber.next(file.filter(line => !line.match('^<')))
     },
-    complete() { }
+    complete() {
+      subscriber.complete()
+    }
   }))
 
 const removeNumberLines = () =>
@@ -79,25 +90,31 @@ const removeNumberLines = () =>
     next(file) {
       subscriber.next(file.filter(line => !line.match('^\\d+')))
     },
-    complete() { }
+    complete() {
+      subscriber.complete()
+    }
   }))
 
-
-const removeTrashCharsFromLines = () => 
+const removeTrashCharsFromLines = () =>
   operatorsFactory(subscriber => ({
     next(file) {
-      subscriber.next(file.map(l => l.replace(/(\r\n|\n|\r|^- |\.+|\?$|,|♪|<[^>]*>|"|\?|!|\[|\]|--|\d)/gm, "")))
+      subscriber.next(file.map(l => l.replace(/(\r\n|\n|\r|^- |\.+|\?$|,|♪|:|<[^>]*>|"|\?|!|\[|\]|--|\d)/gm, "")))
     },
-    complete() { }
+    complete() {
+      subscriber.complete()
+    }
   }))
 
 
 const linesToWords = () =>
   operatorsFactory(subscriber => ({
     next(file) {
-      subscriber.next(file.map(l => l.split(" ")))
+      const mapped = file.map(l => l.split(" "))
+      subscriber.next(mapped.flat())
     },
-    complete() { }
+    complete() {
+      subscriber.complete()
+    }
   }))
 
 const removeTrashWords = () =>
@@ -105,7 +122,9 @@ const removeTrashWords = () =>
     next(file) {
       subscriber.next(file.filter(w => w !== '' && w !== '-'))
     },
-    complete() { }
+    complete() {
+      subscriber.complete()
+    }
   }))
 
 const countElements = (arrayElements) => {
@@ -123,25 +142,12 @@ listFilesFromPath(pathOfLegends)
   .pipe(
     filterFilesByExtension('srt'),
     readFiles(),
-    changeFileLinesToOneArrayElements(),
+    reduce((acc, val) => acc + val),
+    divideFileInLines(),
     removeWhiteSpaces(),
     removeTagLines(),
     removeNumberLines(),
     removeTrashCharsFromLines(),
     linesToWords(),
     removeTrashWords()
-  )
-  .subscribe(console.log)
-
-// listFilesFromPath(pathOfLegends)
-//   .then((filenames) => filterFilesForExtension('srt', filenames))
-//   .then(readFiles)
-//   .then(changeFileLinesToOneArrayElements)
-//   .then(removeEmptyLines)
-//   .then(removeNumberLines)
-//   .then(removeTagLines)
-//   .then(removeTrashCharsFromLines)
-//   .then(linesToWords)
-//   .then(removeTrashWords)
-//   .then(countElements)
-//   .then(console.log)
+  ).subscribe(result => console.log(countElements(result)))
